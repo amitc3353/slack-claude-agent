@@ -43,8 +43,11 @@ const CONFIG = {
   readTools: new Set(['Read', 'Glob', 'Grep', 'WebSearch', 'WebFetch', 'TodoWrite']),
   /** Tools unlocked only after a plan is approved for the thread. */
   writeTools: new Set(['Edit', 'MultiEdit', 'Write', 'NotebookEdit', 'Bash']),
-  /** Bash commands that are always allowed regardless of write-lock (read-only operations). */
-  readOnlyBashPattern: /^\s*(find|ls|cat|head|tail|grep|rg|wc|stat|file|du|diff|git\s+(log|diff|status|show|branch|tag|remote|ls-files)|which|type|echo|pwd|env|printenv|curl\s+-[^|;&]*\s|wget\s+--spider)\b/,
+  /** Bash commands that are always allowed regardless of write-lock (read-only operations).
+   *  PilotAI addition: specific safe `gh` read verbs (not a blanket `gh` allow -- that
+   *  would auto-approve things like `gh pr merge`), and our own read-only report
+   *  scripts by exact filename (not a blanket `python` allow, for the same reason). */
+  readOnlyBashPattern: /^\s*(find|ls|cat|head|tail|grep|rg|wc|stat|file|du|diff|git\s+(log|diff|status|show|branch|tag|remote|ls-files)|which|type|echo|pwd|env|printenv|curl\s+-[^|;&]*\s|wget\s+--spider|gh\s+(pr\s+(list|view|diff|checks)|run\s+(list|view))|(\.venv\/bin\/)?python3?\s+scripts\/(pilot_status|pilot_health|pilot_quality|pilot_costs|check_test_freshness|check_quality_policy|check_context_registry|telemetry_report)\.py)\b/,
   /**
    * Allow MCP tools (named `mcp__<server>__<tool>`) to run automatically. Off by
    * default: MCP tools are denied by the gate below unless ALLOW_MCP_TOOLS is set.

@@ -9,10 +9,10 @@
 # need, and keep the bot out of channels you do not control. See the README Security section.
 
 display_information:
-  name: Claude Remote Worker
+  name: Pilot
 features:
   bot_user:
-    display_name: Claude
+    display_name: Pilot
     always_online: true
 oauth_config:
   scopes:
@@ -20,18 +20,19 @@ oauth_config:
       - app_mentions:read
       - chat:write
       - channels:history
-      - groups:history
+      # groups:history / message.groups deliberately omitted -- #eng is a
+      # public channel (Phase 1 setup), so private-channel scopes aren't
+      # needed. Smallest permission footprint, not an oversight.
   pkce_enabled: false
 settings:
   event_subscriptions:
-    request_url: https://your-tunnel-host.example.com/slack/events
+    request_url: https://bookmark-brought-establish-descriptions.trycloudflare.com/slack/events
     bot_events:
       - app_mention
       - message.channels
-      - message.groups
   interactivity:
     is_enabled: true
-    request_url: https://your-tunnel-host.example.com/slack/events
+    request_url: https://bookmark-brought-establish-descriptions.trycloudflare.com/slack/events
   org_deploy_enabled: false
   socket_mode_enabled: false
   token_rotation_enabled: false
