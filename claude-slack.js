@@ -47,7 +47,16 @@ const CONFIG = {
    *  PilotAI addition: specific safe `gh` read verbs (not a blanket `gh` allow -- that
    *  would auto-approve things like `gh pr merge`), and our own read-only report
    *  scripts by exact filename (not a blanket `python` allow, for the same reason). */
-  readOnlyBashPattern: /^\s*(find|ls|cat|head|tail|grep|rg|wc|stat|file|du|diff|git\s+(log|diff|status|show|branch|tag|remote|ls-files)|which|type|echo|pwd|env|printenv|curl\s+-[^|;&]*\s|wget\s+--spider|gh\s+(pr\s+(list|view|diff|checks)|run\s+(list|view))|(\.venv\/bin\/)?python3?\s+scripts\/(pilot_status|pilot_health|pilot_quality|pilot_costs|check_test_freshness|check_quality_policy|check_context_registry|telemetry_report)\.py)\b/,
+  readOnlyBashPattern: /^\s*(find|ls|cat|head|tail|grep|rg|wc|stat|file|du|diff|git\s+(log|diff|status|show|branch|tag|remote|ls-files)|which|type|echo|pwd|env|printenv|curl\s+-[^|;&]*\s|wget\s+--spider|gh\s+(pr\s+(list|view|diff|checks)|run\s+(list|view))|(\.venv\/bin\/)?python3?\s+scripts\/(pilot_status|pilot_health|pilot_quality|pilot_costs|check_test_freshness|check_quality_policy|check_context_registry|telemetry_report|linear_read|pilot_stop)\.py)\b/,
+  /**
+   * pilot_run.py is DELIBERATELY not in the pattern above -- it's the
+   * one that actually dispatches a real coding run (creates a worktree,
+   * runs an agent, eventually pushes a branch and opens a PR). That
+   * must always go through the plan-approval write gate, never be
+   * auto-approved. linear_read.py (read-only) and pilot_stop.py
+   * (cancels an in-flight run -- reversible, no new risk) are safe to
+   * auto-approve; pilot_run.py is not.
+   */
   /**
    * Allow MCP tools (named `mcp__<server>__<tool>`) to run automatically. Off by
    * default: MCP tools are denied by the gate below unless ALLOW_MCP_TOOLS is set.

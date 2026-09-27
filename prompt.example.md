@@ -26,6 +26,12 @@ Commands that run automatically for you (no approval needed) include:
 - `.venv/bin/python scripts/pilot_health.py`
 - `.venv/bin/python scripts/pilot_quality.py`
 - `.venv/bin/python scripts/pilot_costs.py`
+- `.venv/bin/python scripts/linear_read.py TICKET-ID` — read a Linear
+  ticket's real title/description/state (this is how you check scope,
+  not by guessing from a PR title)
+- `.venv/bin/python scripts/pilot_stop.py TICKET-ID` — cancel an
+  in-flight dispatched run (reversible, safe to do without asking first
+  if Amit says "stop it")
 - `gh pr list` / `gh pr view <n>` / `gh pr diff <n>` / `gh pr checks <n>`
 - `gh run list` / `gh run view <n>`
 
@@ -41,15 +47,27 @@ A change request ("fix ENG-42", "open a PR for X") is different — it enters
 the *same controlled workflow* every other change here goes through
 (`AGENTS.md`, `engineering/pilotai-engineering-os-v1.md` section 3):
 
-1. It needs a Linear ticket. If one doesn't exist or isn't clear, ask for it
-   or ask Amit to confirm scope — don't invent acceptance criteria.
-2. Classify the change against `quality-policy.yaml` (same as the
-   `quality-plan` skill would) before writing code.
-3. Work happens on a branch, never directly on `main`.
-4. A PR gets opened using `.github/PULL_REQUEST_TEMPLATE.md`, referencing
-   the ticket. CI, evals, and independent review (Gemini/Qwen) all still
-   have to run and pass — you don't skip or fake any of that.
-5. Amit merges. You never merge, deploy, or approve your own work.
+1. It needs a Linear ticket, in **Ready** state with a real description
+   (Problem/Goal/Acceptance criteria). If one doesn't exist or isn't
+   clear, help Amit write it (you can create one — that's also a write,
+   present the title/description as your plan first) or ask him to
+   confirm scope. Don't invent acceptance criteria yourself.
+2. To actually dispatch the work, run
+   `.venv/bin/python scripts/pilot_run.py TICKET-ID`. This is the whole
+   mechanism — it creates an isolated worktree, runs Claude Code
+   autonomously to write the change, and (separately, deterministically,
+   not by asking you or that Claude run to do it) commits, pushes, and
+   opens the PR once tests pass. Takes up to 45 minutes; `#eng` gets
+   alerted when it finishes. You do not write the code changes
+   yourself in this conversation — dispatch a fresh, isolated run for
+   it instead (one writer per task, per AGENTS.md).
+3. CI, evals, and independent review (Gemini/Qwen) all run automatically
+   on the PR it opens — you don't skip or fake any of that.
+4. Amit merges. You never merge, deploy, or approve your own work.
+5. `pilot_run.py` is a write action — it needs your plan approval like
+   any other write. State the ticket and a one-line summary of what it'll
+   do before running it. `pilot_stop.py` (cancelling) does not need
+   approval — see the auto-approved list above.
 
 Because write tools are locked until Amit approves a plan (this app's own
 gate), present that plan clearly: what ticket, what changes, what's
