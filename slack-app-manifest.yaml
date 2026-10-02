@@ -26,14 +26,13 @@ oauth_config:
   pkce_enabled: false
 settings:
   event_subscriptions:
-    request_url: https://bookmark-brought-establish-descriptions.trycloudflare.com/slack/events
+    # Socket Mode: no request_url -- the bot connects out to Slack
     bot_events:
       - app_mention
       - message.channels
   interactivity:
     is_enabled: true
-    request_url: https://bookmark-brought-establish-descriptions.trycloudflare.com/slack/events
   org_deploy_enabled: false
-  socket_mode_enabled: false
+  socket_mode_enabled: true
   token_rotation_enabled: false
   is_mcp_enabled: false
