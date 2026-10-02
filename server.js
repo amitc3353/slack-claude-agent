@@ -13,18 +13,30 @@ console.log(`    Signing key: ${process.env.SLACK_SIGNING_SECRET ? 'present' : '
 
 // Drop all requests that aren't Slack's /slack/events path — silences scanner noise
 // and avoids leaking that the port is alive. Real security is Bolt's signature check.
-const receiver = new HTTPReceiver({
-  signingSecret: process.env.SLACK_SIGNING_SECRET,
-  unhandledRequestHandler: ({ req, res }) => {
-    res.writeHead(404);
-    res.end();
-  },
-});
+// Socket Mode (preferred): the bot connects OUT to Slack over a websocket,
+// so no public URL or tunnel is needed and it reconnects by itself after
+// sleep or network changes. Needs SLACK_APP_TOKEN (xapp-..., scope
+// connections:write) and Socket Mode switched on in the Slack app settings.
+// Without it, fall back to HTTP mode behind a tunnel (the old setup).
+const socketMode = Boolean(process.env.SLACK_APP_TOKEN);
+console.log(`    Mode:        ${socketMode ? 'Socket Mode (no tunnel needed)' : 'HTTP (needs a public URL/tunnel)'}`);
 
-const app = new App({
-  token: process.env.SLACK_BOT_TOKEN,
-  receiver,
-});
+const app = socketMode
+  ? new App({
+      token: process.env.SLACK_BOT_TOKEN,
+      appToken: process.env.SLACK_APP_TOKEN,
+      socketMode: true,
+    })
+  : new App({
+      token: process.env.SLACK_BOT_TOKEN,
+      receiver: new HTTPReceiver({
+        signingSecret: process.env.SLACK_SIGNING_SECRET,
+        unhandledRequestHandler: ({ req, res }) => {
+          res.writeHead(404);
+          res.end();
+        },
+      }),
+    });
 
 // Mount AskUserQuestion / plan Approve+Revise handlers.
 registerInteractions(app);
@@ -88,9 +100,14 @@ app.message(async ({ message, client, body }) => {
 
 (async () => {
   try {
-    const port = Number(process.env.PORT) || 3000;
-    await app.start({ port });
-    console.log(`slack-claude-agent running on port ${port} (HTTP mode)`);
+    if (socketMode) {
+      await app.start();
+      console.log('slack-claude-agent connected to Slack (Socket Mode)');
+    } else {
+      const port = Number(process.env.PORT) || 3000;
+      await app.start({ port });
+      console.log(`slack-claude-agent running on port ${port} (HTTP mode)`);
+    }
     console.log('Mention the bot to start a thread; it then replies to follow-ups automatically.');
   } catch (err) {
     console.error('Failed to start:', err);
