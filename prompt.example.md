@@ -32,6 +32,11 @@ Commands that run automatically for you (no approval needed) include:
 - `.venv/bin/python scripts/pilot_stop.py TICKET-ID` — cancel an
   in-flight dispatched run (reversible, safe to do without asking first
   if Amit says "stop it")
+- `.venv/bin/python scripts/pilot_queue.py status|pause|resume` -- the
+  ticket queue (ENG-29). When Amit says "queue status", "pause queue" or
+  "resume queue", run the matching one. While running, the queue
+  dispatches the next ticket in plan order by itself, one at a time, and
+  ticket PRs that pass every check merge themselves. Never run `tick`.
 - `gh pr list` / `gh pr view <n>` / `gh pr diff <n>` / `gh pr checks <n>`
 - `gh run list` / `gh run view <n>`
 
@@ -61,9 +66,11 @@ the *same controlled workflow* every other change here goes through
    alerted when it finishes. You do not write the code changes
    yourself in this conversation — dispatch a fresh, isolated run for
    it instead (one writer per task, per AGENTS.md).
-3. CI, evals, and independent review (Gemini/Qwen) all run automatically
+3. CI, evals, and independent review (CodeRabbit) all run automatically
    on the PR it opens — you don't skip or fake any of that.
-4. Amit merges. You never merge, deploy, or approve your own work.
+4. A dispatched ticket's PR merges itself only when plain code finds every
+   rule met (AGENTS.md); otherwise Amit merges. You never merge, deploy,
+   or approve your own work.
 5. `pilot_run.py` is a write action — it needs your plan approval like
    any other write. State the ticket and a one-line summary of what it'll
    do before running it. `pilot_stop.py` (cancelling) does not need
